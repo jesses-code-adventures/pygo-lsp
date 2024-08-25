@@ -9,7 +9,7 @@ import (
 
 var ServerVersion = "0.0.1"
 
-func SetupLogging(logfileName string) *os.File {
+func SetupLogfile(logfileName string) *os.File {
 	if !strings.Contains(logfileName, ".") {
 		logfileName = logfileName + ".log"
 	}

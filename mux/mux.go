@@ -19,7 +19,7 @@ type Mux struct {
 	notificationHandlers map[string]NotificationHandler
 	methodHandlers       map[string]MethodHandler
 	writeLock            *sync.Mutex
-	serverVersion        string
+	ServerVersion        string
 	logger               *slog.Logger
 }
 
@@ -34,10 +34,9 @@ func NewMux(r *os.File, w *os.File, version string, logger *slog.Logger) Mux {
 		writeLock:            &mut,
 		notificationHandlers: make(map[string]NotificationHandler),
 		methodHandlers:       make(map[string]MethodHandler),
-		serverVersion:        version,
+		ServerVersion:        version,
 		logger:               logger,
 	}
-	mux.RegisterHandlers()
 	return mux
 }
 
