@@ -23,9 +23,12 @@ type Mux struct {
 	logger               *slog.Logger
 }
 
+// handles creating the mux and registering the handlers.
+//
+// the caller should only have to create a NewMux() and then Run() it.
 func NewMux(r *os.File, w *os.File, version string, logger *slog.Logger) Mux {
 	mut := sync.Mutex{}
-	return Mux{
+	mux := Mux{
 		reader:               bufio.NewReader(r),
 		writer:               bufio.NewWriter(w),
 		writeLock:            &mut,
@@ -34,6 +37,8 @@ func NewMux(r *os.File, w *os.File, version string, logger *slog.Logger) Mux {
 		serverVersion:        version,
 		logger:               logger,
 	}
+	mux.RegisterHandlers()
+	return mux
 }
 
 type ErrMethodNotFound struct{}
@@ -59,6 +64,7 @@ func (m *Mux) processSingle(req lsp.Request) (err error) {
 }
 
 func (m *Mux) Process() (err error) {
+	m.logger.Info("running process")
 	req, err := lsp.Read(m.reader)
 	if err != nil {
 		return err

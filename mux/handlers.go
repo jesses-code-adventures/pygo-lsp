@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (m *Mux) RegisterMethods() {
+func (m *Mux) RegisterHandlers() {
 	m.HandleMethod("initialize", func(params json.RawMessage) (result any, err error) {
 		var initializeParams InitializeParams
 		if err = json.Unmarshal(params, &initializeParams); err != nil {
