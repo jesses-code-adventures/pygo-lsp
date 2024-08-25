@@ -95,6 +95,7 @@ func (m *Mux) Notify(method string, params any) (err error) {
 func (m *Mux) Run() {
 	for {
 		if err := m.Process(); err != nil {
+			m.logger.Error(err.Error())
 			return
 		}
 	}
