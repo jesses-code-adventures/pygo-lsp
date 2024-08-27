@@ -2,6 +2,7 @@ package lsp
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/textproto"
@@ -35,16 +36,24 @@ func (e ErrInvalidRequest) Error() string {
 	return "Invalid lsp request"
 }
 
-func Read(r *bufio.Reader) (req Request, err error) {
+type LspHeaders struct {
+	ContentLength int64
+}
+
+func ReadHeaders(r *bufio.Reader) (headers LspHeaders, err error) {
 	header, err := textproto.NewReader(r).ReadMIMEHeader()
 	if err != nil {
 		return
 	}
 	contentLength, err := strconv.ParseInt(header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return req, ErrInvalidContentLengthHeader{}
+		return headers, ErrInvalidContentLengthHeader{}
 	}
-	err = json.NewDecoder(io.LimitReader(r, contentLength)).Decode(&req)
+	return LspHeaders{ContentLength: contentLength}, err
+}
+
+func Read(r *bufio.Reader, headers LspHeaders) (req Request, err error) {
+	err = json.NewDecoder(io.LimitReader(r, headers.ContentLength)).Decode(&req)
 	if err != nil {
 		return
 	}
@@ -52,4 +61,18 @@ func Read(r *bufio.Reader) (req Request, err error) {
 		return req, ErrInvalidRequest{}
 	}
 	return
+}
+
+func RawBytes(r *bufio.Reader, headers LspHeaders) (b []byte, err error) {
+	var buf bytes.Buffer
+	tee := io.TeeReader(io.LimitReader(r, headers.ContentLength), &buf)
+	tempBuf := make([]byte, headers.ContentLength)
+	_, err = io.ReadFull(tee, tempBuf)
+	if err != nil {
+		return b, err
+	}
+	b = make([]byte, headers.ContentLength)
+	copy(b, tempBuf)
+	r.Reset(io.MultiReader(&buf, r))
+	return b, err
 }

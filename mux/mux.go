@@ -63,8 +63,16 @@ func (m *Mux) processSingle(req lsp.Request) (err error) {
 }
 
 func (m *Mux) Process() (err error) {
-	m.logger.Info("running process")
-	req, err := lsp.Read(m.reader)
+	headers, err := lsp.ReadHeaders(m.reader)
+	if err != nil {
+		return err
+	}
+	raw, err := lsp.RawBytes(m.reader, headers)
+	if err != nil {
+		return err
+	}
+	m.logger.Info(string(raw))
+	req, err := lsp.Read(m.reader, headers)
 	if err != nil {
 		return err
 	}
